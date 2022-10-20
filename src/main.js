@@ -26,7 +26,7 @@ function setCardType(type) {
   bgCard.setAttribute("background-image", "none");
 }
 
-setCardType("mastercard");
+setCardType("default");
 
 globalThis.setCardType = setCardType;
 
@@ -75,15 +75,76 @@ const cardNumberPattern = {
       cardtype: "default",
     },
   ],
-  dispatch: function () {
-    const number = (dynamicMasked + appended).replace(/\D/g, "");
+  dispatch: function (appended, dynamicMasked) {
+    const number = (dynamicMasked.value + appended).replace(/\D/g, "");
     const foundMask = dynamicMasked.compiledMasks.find(function (item) {
       return number.match(item.regex);
     });
 
-    setCardType(foundMask.cardtype);
     return foundMask;
   },
 };
 
+globalThis.setCardType = setCardType;
+
 const cardNumberMasked = IMask(cardNumber, cardNumberPattern);
+
+const addButton = document.querySelector("#add-card");
+addButton.addEventListener("click", () => {
+  if (
+    (cardNumberMasked.value === "",
+    securityCodeMasked.value === "",
+    expirationDateMasked.value === "",
+    cardHolder.value === "")
+  ) {
+    alert("Preencha todos os dados do cartão!");
+  } else {
+    alert("Cartão adicionado!");
+    cardNumberMasked.value = "";
+    securityCodeMasked.value = "";
+    expirationDateMasked.value = "";
+    cardHolder.value = "";
+  }
+});
+
+document.querySelector("form").addEventListener("submit", (event) => {
+  event.preventDefault();
+});
+
+const cardHolder = document.querySelector("#card-holder");
+cardHolder.addEventListener("input", () => {
+  const ccHolder = document.querySelector(".cc-holder .value");
+
+  ccHolder.innerText =
+    cardHolder.value.length === 0 ? "FULANO DA SILVA" : cardHolder.value;
+});
+
+securityCodeMasked.on("accept", () => {
+  updateSecurityCode(securityCodeMasked.value);
+});
+
+function updateSecurityCode(code) {
+  const ccSecurity = document.querySelector(".cc-security .value");
+
+  ccSecurity.innerText = code.length === 0 ? "123" : code;
+}
+
+cardNumberMasked.on("accept", () => {
+  const cardType = cardNumberMasked.masked.currentMask.cardtype;
+  setCardType(cardType);
+  updateCardNumber(cardNumberMasked.value);
+});
+
+function updateCardNumber(number) {
+  const ccNumber = document.querySelector(".cc-number");
+  ccNumber.innerText = number.length === 0 ? "1234 5678 9012 3456" : number;
+}
+
+expirationDateMasked.on("accept", () => {
+  updateExpirationDate(expirationDateMasked.value);
+});
+
+function updateExpirationDate(date) {
+  const ccExpiration = document.querySelector(".cc-extra .value");
+  ccExpiration.innerText = date.length === 0 ? "02/32" : date;
+}
